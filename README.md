@@ -7,6 +7,7 @@
 Install the following tools:
 * [Docker](https://docs.docker.com/engine) >= `19.03.13`
 * [buildx](https://github.com/docker/buildx#installing) >= `v0.4.1`
+* [msgpack-c](https://github.com/msgpack/msgpack-c/blob/c_master/QUICKSTART-C.md#install) - if building on the host
 
 Enable the experimental features for Docker CLI by adding the following config to `~/.docker/config.json`:
 ```json
@@ -36,7 +37,7 @@ docker buildx bake
 ```
 
 ### Native
-Make sure you've installed [msgpack-c](https://github.com/msgpack/msgpack-c/blob/c_master/QUICKSTART-C.md#install) on your machine. Then build the `hello` cmd on the current platform:
+Build the `hello` cmd on the current platform/host:
 ```bash
 CGO_LDFLAGS="-lmsgpackc" go build -race -o ./bin/hello cmd/hello/main.go
 ```
