@@ -5,31 +5,13 @@ ENV GNU_HOST=arm-linux-gnueabi
 ENV CC=$GNU_HOST-gcc
 
 RUN apt-get update && \
-  apt-get --no-install-recommends install -y autoconf \
-    automake \
-    build-essential \
-    ca-certificates \
-    cmake \
-    gcc-$GNU_HOST \
-    libc6-dev-armel-cross \
-    git \
-    gnupg \
-    pkg-config && \
+  apt-get --no-install-recommends install -y gcc-$GNU_HOST \
+    libc6-dev-armel-cross && \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code
-ENV MSGPACK_DIR=/code/third_party/msgpack-c
-
-RUN git clone --depth 1 --single-branch --branch c_master https://github.com/msgpack/msgpack-c.git $MSGPACK_DIR && \
-  cd $MSGPACK_DIR && \
-  cmake -DCMAKE_C_COMPILER=$CC \
-    -DBUILD_SHARED_LIBS=OFF \
-    -DMSGPACK_BUILD_EXAMPLES=OFF \
-    . && \
-  make -j `nproc`
 
 COPY ./go.mod .
-COPY ./go.sum .
 
 ENV GO111MODULE=on
 
@@ -41,8 +23,6 @@ FROM base AS builder
 WORKDIR /code
 
 ENV CGO_ENABLED=1
-ENV CGO_CFLAGS="-I$MSGPACK_DIR/include"
-ENV CGO_LDFLAGS="-L$MSGPACK_DIR -lmsgpackc"
 ENV GOARCH=arm
 ENV GOOS=linux
 ENV BIN_DIR /tmp/bin

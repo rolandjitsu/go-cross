@@ -13,18 +13,6 @@ jobs:
       - name: Setup deps
         run: sudo apt-get install -y autoconf automake build-essential cmake pkg-config
       - uses: actions/checkout@v2
-      - name: Checkout msgpack-c
-        uses: actions/checkout@v2
-        with:
-          repository: msgpack/msgpack-c
-          path: msgpack-c
-          ref: 'c_master'
-      - name: Setup msgpack
-        run: |
-          cd msgpack-c
-          cmake .
-          make -j `nproc`
-          sudo make install
       - uses: actions/setup-go@v2
         with:
           go-version: '^1.15.2'
@@ -36,12 +24,6 @@ jobs:
         run: |
           out=$(./bin/hello John)
           if [ "$out" != "Hello, John!" ]; then
-            echo "Binary output is not ok"
-            exit 1
-          fi
-
-          out=$(./bin/hello -msgpack John)
-          if [ "$out" != "Hello, John! from msgpack" ]; then
             echo "Binary output is not ok"
             exit 1
           fi
@@ -67,12 +49,6 @@ jobs:
 
           out=$(qemu-arm -L /usr/arm-linux-gnueabi/ ./bin/hello John)
           if [ "$out" != "Hello, John!" ]; then
-            echo "Binary output is not ok"
-            exit 1
-          fi
-
-          out=$(qemu-arm -L /usr/arm-linux-gnueabi/ ./bin/hello -msgpack John)
-          if [ "$out" != "Hello, John! from msgpack" ]; then
             echo "Binary output is not ok"
             exit 1
           fi
