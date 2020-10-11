@@ -1,0 +1,60 @@
+# syntax = docker/dockerfile:1.1-experimental
+FROM golang:1.15-buster AS base
+
+ENV GNU_HOST=arm-linux-gnueabi
+ENV CC=$GNU_HOST-gcc
+
+RUN apt-get update && \
+  apt-get --no-install-recommends install -y autoconf \
+    automake \
+    build-essential \
+    ca-certificates \
+    cmake \
+    gcc-$GNU_HOST \
+    libc6-dev-armel-cross \
+    git \
+    gnupg \
+    pkg-config && \
+  rm -rf /var/lib/apt/lists/*
+
+WORKDIR /code
+ENV MSGPACK_DIR=/code/third_party/msgpack-c
+
+RUN git clone --depth 1 --single-branch --branch c_master https://github.com/msgpack/msgpack-c.git $MSGPACK_DIR && \
+  cd $MSGPACK_DIR && \
+  cmake -DCMAKE_C_COMPILER=$CC \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DMSGPACK_BUILD_EXAMPLES=OFF \
+    . && \
+  make -j `nproc`
+
+COPY ./go.mod .
+COPY ./go.sum .
+
+ENV GO111MODULE=on
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+  go mod download
+
+FROM base AS builder
+
+WORKDIR /code
+
+ENV CGO_ENABLED=1
+ENV CGO_CFLAGS="-I$MSGPACK_DIR/include"
+ENV CGO_LDFLAGS="-L$MSGPACK_DIR -lmsgpackc"
+ENV GOARCH=arm
+ENV GOOS=linux
+ENV BIN_DIR /tmp/bin
+
+COPY . .
+
+RUN --mount=type=cache,target=/root/.cache/ \
+  --mount=type=cache,target=/go/pkg/mod,ro \
+  mkdir -p $BIN_DIR && \
+  go build -mod readonly \
+  -o $BIN_DIR/ \
+  ./cmd/...
+
+FROM scratch
+COPY --from=builder /tmp/bin /

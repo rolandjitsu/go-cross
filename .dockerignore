@@ -1,0 +1,9 @@
+.git
+bin
+third_party
+.editorconfig
+.gitignore
+docker-bake.hcl
+Dockerfile.hello
+LICENSE
+README.md

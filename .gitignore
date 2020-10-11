@@ -19,3 +19,20 @@ Icon
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+
+# Go
+## Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+## Test binary
+*.test
+
+## Output of coverage
+*.out
+
+# Artifacts
+bin/
