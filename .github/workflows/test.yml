@@ -28,6 +28,7 @@ jobs:
           cmake -DMSGPACK_BUILD_EXAMPLES=OFF .
           make -j$(nproc)
           sudo make install
+          sudo ldconfig
 
       - uses: actions/setup-go@v5
         with:
@@ -37,7 +38,7 @@ jobs:
         run: go test ./pkg/...
 
       - name: Compile native binary
-        run: CGO_LDFLAGS="-lmsgpackc" go build -race -o ./bin/hello cmd/hello/main.go
+        run: CGO_LDFLAGS="-L/usr/local/lib -lmsgpack-c" go build -race -o ./bin/hello cmd/hello/main.go
 
       - name: Verify native binary
         run: |

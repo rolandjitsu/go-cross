@@ -32,7 +32,7 @@ docker buildx build -f Dockerfile.hello --build-arg TARGETARCH=arm64 -o type=loc
 ### Native
 Build the `hello` cmd on your current host architecture:
 ```bash
-CGO_LDFLAGS="-lmsgpackc" go build -race -o ./bin/hello cmd/hello/main.go
+CGO_LDFLAGS="-lmsgpack-c" go build -race -o ./bin/hello cmd/hello/main.go
 ```
 
 ## Test
