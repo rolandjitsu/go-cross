@@ -63,7 +63,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Setup QEMU user emulation
-        run: sudo apt-get update && sudo apt-get install -y qemu-user gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf
+        run: sudo apt-get update && sudo apt-get install -y qemu-user libc6-arm64-cross libc6-armhf-cross gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf
 
       - name: Compile ARM64 binary
         run: docker buildx bake hello-arm64
@@ -75,13 +75,13 @@ jobs:
         run: |
           out=$(qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./bin/arm64/hello John)
           if [ "$out" != "Hello, John!" ]; then
-            echo "ARM64 binary output is not ok"
+            echo "ARM64 binary output is not ok: got '$out'"
             exit 1
           fi
 
           out=$(qemu-aarch64 -L /usr/aarch64-linux-gnu/ ./bin/arm64/hello -msgpack John)
-          if [ "$out" != "ARM64 binary output is not ok" ]; then
-            echo "ARM64 binary output is not ok"
+          if [ "$out" != "Hello, John! from msgpack" ]; then
+            echo "ARM64 binary output is not ok: got '$out'"
             exit 1
           fi
 
@@ -89,12 +89,12 @@ jobs:
         run: |
           out=$(qemu-arm -L /usr/arm-linux-gnueabihf/ ./bin/arm/hello John)
           if [ "$out" != "Hello, John!" ]; then
-            echo "ARMv7 binary output is not ok"
+            echo "ARMv7 binary output is not ok: got '$out'"
             exit 1
           fi
 
           out=$(qemu-arm -L /usr/arm-linux-gnueabihf/ ./bin/arm/hello -msgpack John)
-          if [ "$out" != "ARMv7 binary output is not ok" ]; then
-            echo "ARMv7 binary output is not ok"
+          if [ "$out" != "Hello, John! from msgpack" ]; then
+            echo "ARMv7 binary output is not ok: got '$out'"
             exit 1
           fi
