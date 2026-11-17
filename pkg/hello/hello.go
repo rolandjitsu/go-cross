@@ -15,6 +15,7 @@ func Greet(name string) {
 	size := C.size_t(len(name))
 	msg := C.greet(cs, size)
 	fmt.Println(C.GoString(msg))
+	C.free(unsafe.Pointer(msg))
 	C.free(unsafe.Pointer(cs))
 }
 

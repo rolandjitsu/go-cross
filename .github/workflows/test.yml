@@ -62,7 +62,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Setup QEMU user emulation
-        run: sudo apt-get update && sudo apt-get install -y qemu-user-static gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf
+        run: sudo apt-get update && sudo apt-get install -y qemu-user gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf
 
       - name: Compile ARM64 binary
         run: docker buildx bake hello-arm64
