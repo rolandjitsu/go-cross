@@ -1,7 +1,7 @@
 # Go Cross
 > Cross-compile Go projects with C dependencies for ARM.
 
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/rolandjitsu/go-cross/test.yml?branch=master&style=flat-square)](https://github.com/rolandjitsu/go-cross/actions?query=workflow%3ATest)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/rolandjitsu/go-cross/test.yml?branch=main&style=flat-square)](https://github.com/rolandjitsu/go-cross/actions?query=workflow%3ATest)
 
 ## Prerequisites
 Install the following tools:
