@@ -1,37 +1,47 @@
-# syntax = docker/dockerfile:1.1-experimental
-FROM golang:1.15-buster AS base
+# syntax=docker/dockerfile:1
+ARG GO_VERSION=1.23
+FROM golang:${GO_VERSION}-bookworm AS base
 
-ENV GNU_HOST=arm-linux-gnueabi
-ENV CC=$GNU_HOST-gcc
+ARG TARGETARCH=arm64
+
+ENV GNU_HOST_arm64=aarch64-linux-gnu
+ENV GNU_HOST_arm=arm-linux-gnueabihf
 
 RUN apt-get update && \
-  apt-get --no-install-recommends install -y autoconf \
+  apt-get --no-install-recommends install -y \
+    autoconf \
     automake \
     build-essential \
     ca-certificates \
     cmake \
-    gcc-$GNU_HOST \
-    libc6-dev-armel-cross \
     git \
-    gnupg \
     pkg-config && \
+  if [ "$TARGETARCH" = "arm64" ]; then \
+    apt-get --no-install-recommends install -y gcc-aarch64-linux-gnu libc6-dev-arm64-cross; \
+  elif [ "$TARGETARCH" = "arm" ]; then \
+    apt-get --no-install-recommends install -y gcc-arm-linux-gnueabihf libc6-dev-armhf-cross; \
+  fi && \
   rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code
 ENV MSGPACK_DIR=/code/third_party/msgpack-c
 
-RUN git clone --depth 1 --single-branch --branch c_master https://github.com/msgpack/msgpack-c.git $MSGPACK_DIR && \
+RUN if [ "$TARGETARCH" = "arm64" ]; then \
+      export CC=aarch64-linux-gnu-gcc; \
+    else \
+      export CC=arm-linux-gnueabihf-gcc; \
+    fi && \
+  git clone --depth 1 --single-branch --branch c_master https://github.com/msgpack/msgpack-c.git $MSGPACK_DIR && \
   cd $MSGPACK_DIR && \
   cmake -DCMAKE_C_COMPILER=$CC \
+    -DCMAKE_SYSTEM_NAME=Linux \
+    -DCMAKE_SYSTEM_PROCESSOR=${TARGETARCH} \
     -DBUILD_SHARED_LIBS=OFF \
     -DMSGPACK_BUILD_EXAMPLES=OFF \
     . && \
-  make -j `nproc`
+  make -j$(nproc)
 
-COPY ./go.mod .
-COPY ./go.sum .
-
-ENV GO111MODULE=on
+COPY ./go.mod ./go.sum ./
 
 RUN --mount=type=cache,target=/go/pkg/mod \
   go mod download
@@ -40,21 +50,28 @@ FROM base AS builder
 
 WORKDIR /code
 
+ARG TARGETARCH=arm64
+
 ENV CGO_ENABLED=1
 ENV CGO_CFLAGS="-I$MSGPACK_DIR/include"
 ENV CGO_LDFLAGS="-L$MSGPACK_DIR -lmsgpackc"
-ENV GOARCH=arm
+ENV GOARCH=${TARGETARCH}
 ENV GOOS=linux
-ENV BIN_DIR /tmp/bin
+ENV BIN_DIR=/tmp/bin
 
 COPY . .
 
-RUN --mount=type=cache,target=/root/.cache/ \
+RUN --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/go/pkg/mod,ro \
   mkdir -p $BIN_DIR && \
-  go build -mod readonly \
-  -o $BIN_DIR/ \
-  ./cmd/...
+  if [ "$TARGETARCH" = "arm64" ]; then \
+    export CC=aarch64-linux-gnu-gcc; \
+  else \
+    export CC=arm-linux-gnueabihf-gcc GOARM=7; \
+  fi && \
+  go build -trimpath -ldflags="-s -w" -mod readonly \
+    -o $BIN_DIR/ \
+    ./cmd/...
 
 FROM scratch
 COPY --from=builder /tmp/bin /

@@ -1,69 +1,58 @@
 # Go Cross
-> Cross-compile Go projects with C dependencies.
+> Cross-compile Go projects with C dependencies for ARM.
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/rolandjitsu/go-cross/Test?label=tests&style=flat-square)](https://github.com/rolandjitsu/go-cross/actions?query=workflow%3ATest)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/rolandjitsu/go-cross/test.yml?branch=master&style=flat-square)](https://github.com/rolandjitsu/go-cross/actions?query=workflow%3ATest)
 
 ## Prerequisites
 Install the following tools:
-* [Docker](https://docs.docker.com/engine) >= `19.03.13`
-* [buildx](https://github.com/docker/buildx#installing) >= `v0.4.1`
-* [msgpack-c](https://github.com/msgpack/msgpack-c/blob/c_master/QUICKSTART-C.md#install) - if building on the host
+* [Docker](https://docs.docker.com/engine) >= `20.10.0`
+* [buildx](https://github.com/docker/buildx#installing) >= `v0.8.0`
+* [msgpack-c](https://github.com/msgpack/msgpack-c/blob/c_master/QUICKSTART-C.md#install) - if building directly on the host
 
-Enable the experimental features for Docker CLI by adding the following config to `~/.docker/config.json`:
-```json
-{
-    "experimental": "enabled"
-}
-```
-
-And enable the experimental features for Docker Daemon by adding the following config to the `/etc/docker/daemon.json` file (for Linux; on macOS it's `~/.docker/daemon.json`):
-```json
-{
-    "experimental": true
-}
-```
+Modern Docker (v23+) supports BuildKit and multi-platform compilation out of the box without requiring experimental configuration.
 
 ## Build
 
-### Docker
-Build the `hello` binary with buildx [build](https://github.com/docker/buildx#buildx-build-options-path--url---):
+### Docker (Buildx / Bake)
+Build for 64-bit ARM (`arm64`):
 ```bash
-docker buildx build -f Dockerfile.hello -o type=local,dest=./bin .
+docker buildx bake hello-arm64
 ```
 
-Or build it with [bake](https://github.com/docker/buildx#buildx-bake-options-target):
+Build for 32-bit ARM (`arm`):
 ```bash
-docker buildx bake
+docker buildx bake hello-arm
+```
+
+Or build with standard `buildx build`:
+```bash
+docker buildx build -f Dockerfile.hello --build-arg TARGETARCH=arm64 -o type=local,dest=./bin/arm64 .
 ```
 
 ### Native
-Build the `hello` cmd on the current platform/host:
+Build the `hello` cmd on your current host architecture:
 ```bash
 CGO_LDFLAGS="-lmsgpackc" go build -race -o ./bin/hello cmd/hello/main.go
 ```
 
 ## Test
-To run tests for `pkg` run:
+To run tests for `pkg`:
 ```bash
 go test ./pkg/...
 ```
 
-To avoid caching during tests use:
+To avoid caching during tests:
 ```bash
 go test -count=1 ./pkg/...
 ```
 
-To get coverage reports use the `-cover` flag:
+To get coverage reports:
 ```bash
 go test -coverprofile=coverage.out ./pkg/...
-```
-
-And to view the profile run:
-```bash
 go tool cover -html=coverage.out
 ```
 
-To run static analysis on a package/cmd run:
+To run static analysis:
 ```bash
 go vet ./cmd/hello/main.go
 ```

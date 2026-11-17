@@ -1,7 +1,7 @@
 package hello
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 
@@ -16,7 +16,7 @@ func TestGreet(t *testing.T) {
 	Greet("John")
 
 	w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = stdout
 
 	assert.Equal(t, "Hello, John!\n", string(out))
@@ -33,7 +33,7 @@ func TestGreetMsgPack(t *testing.T) {
 	}
 
 	w.Close()
-	out, _ := ioutil.ReadAll(r)
+	out, _ := io.ReadAll(r)
 	os.Stdout = stdout
 
 	assert.Equal(t, "Hello, John! from msgpack\n", string(out))
